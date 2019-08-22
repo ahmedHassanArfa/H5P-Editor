@@ -1,0 +1,30 @@
+{
+  "name": "h5p-demo",
+  "version": "0.0.1",
+  "description": "Demonstrates the usage of the H5P-Nodejs-Library and H5P-Editor-Nodejs-Library",
+  "main": "express.js",
+  "scripts": {
+    "postinstall": "./download-core.sh 1.22.0 && cp -r node_modules/h5p-editor/src/client h5p/editor/wp",
+    "start": "node express.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lumieducation/H5P-Demo.git"
+  },
+  "keywords": [
+    "H5P"
+  ],
+  "author": "jps@lumi.education",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Lumieducation/H5P-Demo/issues"
+  },
+  "homepage": "https://github.com/Lumieducation/H5P-Demo#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.5",
+    "fs-extra": "^8.1.0",
+    "shortid": "^2.2.14"
+  }
+}
