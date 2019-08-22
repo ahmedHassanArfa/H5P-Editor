@@ -22,6 +22,7 @@ const fs = require('fs');
 const index = require('./index');
 
 const H5PEditor = require('h5p-editor');
+const H5PPlayer = require('h5p-player');
 
 const start = async () => {
     const h5pEditor = new H5PEditor.Editor(
@@ -64,6 +65,25 @@ const start = async () => {
                 res.end(index({ contentIds: files }));
             }
         );
+    });
+
+    server.get('/play', (req, res) => {
+        if (!req.query.contentId) {
+            return res.redirect('/');
+        }
+
+        let contentDir = `h5p/content/${req.query.contentId}`;
+
+        const libraryLoader = (lib, maj, min) =>
+            require(`./h5p/libraries/${lib}-${maj}.${min}/library.json`);
+
+        new H5PPlayer(libraryLoader).render(
+            req.query.contentId,
+            require(`./${contentDir}/content/content.json`),
+            require(`./${contentDir}/h5p.json`)
+        )
+            .then(h5p_page => res.end(h5p_page))
+            .catch(error => res.status(500).end(error.message));
     });
 
     server.get('/edit', (req, res) => {
