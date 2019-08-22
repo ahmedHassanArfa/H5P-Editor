@@ -19,10 +19,14 @@ const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 const shortid = require('shortid');
 const fs = require('fs');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 const index = require('./index');
 
 const H5PEditor = require('h5p-editor');
 const H5PPlayer = require('h5p-player');
+
+const examples = require('./examples.json');
 
 const start = async () => {
     const h5pEditor = new H5PEditor.Editor(
@@ -64,7 +68,7 @@ const start = async () => {
             'h5p/content',
             (error, files) => {
                 if (error) files = [];
-                res.end(index({ contentIds: files }));
+                res.end(index({ contentIds: files, examples }));
             }
         );
     });
@@ -84,6 +88,37 @@ const start = async () => {
             require(`./${contentDir}/content/content.json`),
             require(`./${contentDir}/h5p.json`)
         )
+            .then(h5p_page => res.end(h5p_page))
+            .catch(error => res.status(500).end(error.message));
+    });
+
+    server.get('/examples/:key', (req, res) => {
+        let key = req.params.key;
+        let name = path.basename(examples[key].h5p);
+    
+        let dir = `${__dirname}/examples/${name}`;
+    
+        server.use('/h5p/libraries', express.static(dir));
+        server.use(`/h5p/content/${name}`, express.static(`${dir}`));
+    
+        let first = Promise.resolve();
+        if (!fs.existsSync(dir)) {
+            first = exec(`sh download-example.sh ${examples[key].h5p}`);
+        }
+    
+        const libraryLoader = (lib, maj, min) =>
+            require(`./examples/${name}/${lib}-${maj}.${min}/library.json`);
+    
+        first
+            .then(() => {
+                const h5pObject = require(`${dir}/h5p.json`);
+                const contentObject = require(`${dir}/content/content.json`);
+                return new H5PPlayer(libraryLoader).render(
+                    name,
+                    contentObject,
+                    h5pObject
+                );
+            })
             .then(h5p_page => res.end(h5p_page))
             .catch(error => res.status(500).end(error.message));
     });

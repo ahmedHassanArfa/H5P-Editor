@@ -4,7 +4,7 @@
   "description": "Demonstrates the usage of the H5P-Nodejs-Library and H5P-Editor-Nodejs-Library",
   "main": "express.js",
   "scripts": {
-    "postinstall": "./download-core.sh 1.22.0 && cp -r node_modules/h5p-editor/src/client h5p/editor/wp",
+    "postinstall": "sh install.sh && cp -r node_modules/h5p-editor/src/client h5p/editor/wp",
     "start": "node express.js"
   },
   "repository": {
@@ -25,6 +25,9 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "fs-extra": "^8.1.0",
+    "jsdom": "^15.1.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
     "shortid": "^2.2.14"
   }
 }
