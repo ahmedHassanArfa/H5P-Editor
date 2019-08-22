@@ -18,6 +18,8 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 const shortid = require('shortid');
+const fs = require('fs');
+const index = require('./index');
 
 const H5PEditor = require('h5p-editor');
 
@@ -55,6 +57,16 @@ const start = async () => {
     server.use(h5pRoute, express.static(`${path.resolve('')}/h5p`));
 
     server.get('/', (req, res) => {
+        fs.readdir(
+            'h5p/content',
+            (error, files) => {
+                if (error) files = [];
+                res.end(index({ contentIds: files }));
+            }
+        );
+    });
+
+    server.get('/edit', (req, res) => {
         if (!req.query.contentId) {
             res.redirect(`?contentId=${shortid()}`);
         }
@@ -103,7 +115,7 @@ const start = async () => {
         }
     });
 
-    server.post('/', (req, res) => {
+    server.post('/edit', (req, res) => {
         h5pEditor
             .saveH5P(
                 req.query.contentId,
