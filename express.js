@@ -41,7 +41,6 @@ const start = async () => {
     );
 
     const server = express();
-    const h5pRoute = '/h5p';
 
     server.use(bodyParser.json());
     server.use(
@@ -55,8 +54,11 @@ const start = async () => {
         })
     );
 
+    const h5pRoute = '/h5p';
     server.use(h5pRoute, express.static(`${path.resolve('')}/h5p`));
 
+    server.use('/favicon.ico', express.static(`favicon.ico`));
+    
     server.get('/', (req, res) => {
         fs.readdir(
             'h5p/content',
