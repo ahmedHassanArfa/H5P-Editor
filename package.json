@@ -4,8 +4,13 @@
   "description": "Demonstrates the usage of the H5P-Nodejs-Library and H5P-Editor-Nodejs-Library",
   "main": "express.js",
   "scripts": {
-    "postinstall": "sh install.sh && cp -r node_modules/h5p-editor/src/client h5p/editor/wp",
-    "start": "node express.js"
+    "postinstall": "sh install.sh",
+    "start": "node express.js",
+    "lint": "eslint ./test",
+    "ci": "npm run download:content && npm run test:content && npm run test:content:async",
+    "download:content": "node test/download_content.ci.js ",
+    "test:content": "node test/content.ci.js",
+    "test:content:async": "node test/content-with-async-libraryLoader.ci.js"
   },
   "repository": {
     "type": "git",
@@ -25,7 +30,11 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "fs-extra": "^8.1.0",
+    "h5p-editor": "0.0.0",
+    "h5p-player": "^0.4.0",
     "jsdom": "^15.1.1",
+    "promise-queue": "^2.2.5",
+    "puppeteer": "^1.19.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "shortid": "^2.2.14"

@@ -83,7 +83,7 @@ const start = async () => {
         const libraryLoader = (lib, maj, min) =>
             require(`./h5p/libraries/${lib}-${maj}.${min}/library.json`);
 
-        new H5PPlayer(libraryLoader).render(
+        new H5PPlayer.Player(libraryLoader).render(
             req.query.contentId,
             require(`./${contentDir}/content/content.json`),
             require(`./${contentDir}/h5p.json`)
@@ -113,7 +113,7 @@ const start = async () => {
             .then(() => {
                 const h5pObject = require(`${dir}/h5p.json`);
                 const contentObject = require(`${dir}/content/content.json`);
-                return new H5PPlayer(libraryLoader).render(
+                return new H5PPlayer.Player(libraryLoader).render(
                     name,
                     contentObject,
                     h5pObject
