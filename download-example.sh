@@ -7,7 +7,7 @@ url=$1
 echo "Downloading $url"
 
 name=$(basename "$url")
-wget "$url" -O"$base/tmp/$name"
+curl -L "$url" -o"$base/tmp/$name"
 unzip -a "$base/tmp/$name" -d"$base/examples/$name"
 
 rm -rf "$base/tmp"

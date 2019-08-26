@@ -15,9 +15,9 @@ version=$1
 core=https://github.com/h5p/h5p-php-library/archive/$version.zip
 editor=https://github.com/h5p/h5p-editor-php-library/archive/$version.zip
 
-wget $core -O"$base/tmp/core.zip"
+curl -L $core -o"$base/tmp/core.zip"
 unzip -a "$base/tmp/core.zip" -d"$base/tmp/core"
-wget $editor -O"$base/tmp/editor.zip"
+curl -L $editor -o"$base/tmp/editor.zip"
 unzip -a "$base/tmp/editor.zip" -d"$base/tmp/editor"
 mv "$base/tmp/core/h5p-php-library-$version"/* "$base/core/"
 mv "$base/tmp/editor/h5p-editor-php-library-$version"/* "$base/editor/"
