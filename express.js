@@ -1,18 +1,3 @@
-/**
- * Use cases
- * 
- * X Upload Package
- * X Edit Package
- * X Create Package
- * - List Packages
- * - Delete Package
- * - Play Package
- */
-
-// require("@babel/core");
-// require("@babel/register");
-// require("babel-polyfill");
-
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -62,7 +47,7 @@ const start = async () => {
     server.use(h5pRoute, express.static(`${path.resolve('')}/h5p`));
 
     server.use('/favicon.ico', express.static(`favicon.ico`));
-    
+
     server.get('/', (req, res) => {
         fs.readdir(
             'h5p/content',
@@ -81,34 +66,36 @@ const start = async () => {
         let contentDir = `h5p/content/${req.query.contentId}`;
 
         const libraryLoader = (lib, maj, min) =>
-            require(`./h5p/libraries/${lib}-${maj}.${min}/library.json`);
+            readJson(`./h5p/libraries/${lib}-${maj}.${min}/library.json`);
 
-        new H5PPlayer.Player(libraryLoader).render(
-            req.query.contentId,
-            require(`./${contentDir}/content/content.json`),
-            require(`./${contentDir}/h5p.json`)
-        )
-            .then(h5p_page => res.end(h5p_page))
-            .catch(error => res.status(500).end(error.message));
+        Promise.all([
+            readJson(`./${contentDir}/content/content.json`),
+            readJson(`./${contentDir}/h5p.json`)
+        ])
+            .then(([contentObject, h5pObject]) =>
+                new H5PPlayer.Player(libraryLoader)
+                    .render(req.query.contentId, contentObject, h5pObject)
+                    .then(h5p_page => res.end(h5p_page))
+                    .catch(error => res.status(500).end(error.message)));
     });
 
     server.get('/examples/:key', (req, res) => {
         let key = req.params.key;
         let name = path.basename(examples[key].h5p);
-    
+
         let dir = `${__dirname}/examples/${name}`;
-    
+
         server.use('/h5p/libraries', express.static(dir));
         server.use(`/h5p/content/${name}`, express.static(`${dir}`));
-    
+
         let first = Promise.resolve();
         if (!fs.existsSync(dir)) {
             first = exec(`sh download-example.sh ${examples[key].h5p}`);
         }
-    
+
         const libraryLoader = (lib, maj, min) =>
             require(`./examples/${name}/${lib}-${maj}.${min}/library.json`);
-    
+
         first
             .then(() => {
                 const h5pObject = require(`${dir}/h5p.json`);
@@ -244,6 +231,12 @@ const start = async () => {
     server.listen(process.env.PORT || 8080, () => {
         console.log(`server running at http://localhost:${process.env.PORT || 8080}`);
     });
+}
+
+function readJson(file) {
+    return new Promise((y, n) =>
+        fs.readFile(file, 'utf8', (err, data) =>
+            err ? n(err) : y(JSON.parse(data))))
 }
 
 start();
