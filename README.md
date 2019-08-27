@@ -16,15 +16,34 @@ This will install all dependencies, including the H5P Player and Editor librarie
 
 ## Usage
 
+### Run Demo
+
 After installation, you can start the demo with
 
     npm start
 
 and browsing to http://localhost:8080.
 
+### Run Tests
+
 To run the integration tests locally (using Chromium and Puppeteer), use the command
 
     npm run ci
+
+### Content Tests
+
+To run the integration test, simply use
+
+```
+npm run test:content
+```
+
+This command will do the following:
+
+1. download all H5P-Examples specified in the [examples/examples.json](examples/examples.json).
+2. start a local webserver on port 8080
+3. start a chromium instance via [puppeteer](https://github.com/GoogleChrome/puppeteer)
+4. checks every example if it throws errors when openend in a browser
 
 ## Contributing
 
