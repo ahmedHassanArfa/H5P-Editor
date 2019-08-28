@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
-const shortid = require('shortid');
 const fs = require('fs');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
@@ -14,8 +13,14 @@ const H5PPlayer = require('h5p-player');
 const examples = require('./examples.json');
 
 const start = async () => {
+    const libraryManager = new H5PEditor.LibraryManager(new H5PEditor.FileLibraryStorage(`${path.resolve('')}/h5p/libraries`));
+    const contentStorage = new H5PEditor.FileContentStorage(`${path.resolve('')}/h5p/content`);
+    const contentManager = new H5PEditor.ContentManager(contentStorage);
+    const config = await new H5PEditor.Config(new H5PEditor.JsonStorage(path.resolve('config.json'))).load();
+    const translationService = new H5PEditor.TranslationService(H5PEditor.englishStrings);
+    const packageManager = new H5PEditor.PackageManager(libraryManager, translationService, config, contentManager);
+
     const h5pEditor = new H5PEditor.Editor(
-        new H5PEditor.FileStorage(`${path.resolve()}/h5p`),
         {
             baseUrl: '/h5p',
             ajaxPath: '/ajax?action=',
@@ -23,10 +28,11 @@ const start = async () => {
             filesPath: '/h5p/content'
         },
         new H5PEditor.InMemoryStorage(),
-        await new H5PEditor.Config(new H5PEditor.JsonStorage(path.resolve('config.json'))).load(),
-        new H5PEditor.LibraryManager(new H5PEditor.FileLibraryStorage(`${path.resolve('')}/h5p/libraries`)),
+        config,
+        libraryManager,
+        contentManager,
         new H5PEditor.User(),
-        new H5PEditor.TranslationService(H5PEditor.englishStrings)
+        translationService
     );
 
     const server = express();
@@ -44,6 +50,19 @@ const start = async () => {
     );
 
     const h5pRoute = '/h5p';
+
+    server.get(`${h5pRoute}/libraries/:uberName/:file(*)`, async (req, res) => {
+        const stream = await libraryManager.getFileStream(H5PEditor.Library.createFromName(req.params.uberName), req.params.file);
+        stream.on("end", () => { res.end(); })
+        stream.pipe(res.type(path.basename(req.params.file)));
+    });
+
+    server.get(`${h5pRoute}/content/:id/content/:file(*)`, async (req, res) => {
+        const stream = await contentManager.getContentFileStream(req.params.id, req.params.file, null);
+        stream.on("end", () => { res.end(); })
+        stream.pipe(res.type(path.basename(req.params.file)));
+    });
+
     server.use(h5pRoute, express.static(`${path.resolve('')}/h5p`));
 
     server.use('/favicon.ico', express.static(`favicon.ico`));
@@ -63,14 +82,12 @@ const start = async () => {
             return res.redirect('/');
         }
 
-        let contentDir = `h5p/content/${req.query.contentId}`;
-
         const libraryLoader = (lib, maj, min) =>
-            readJson(`./h5p/libraries/${lib}-${maj}.${min}/library.json`);
+            libraryManager.loadLibrary(new H5PEditor.Library(lib, maj, min));
 
         Promise.all([
-            readJson(`./${contentDir}/content/content.json`),
-            readJson(`./${contentDir}/h5p.json`)
+            contentManager.loadContent(req.query.contentId),
+            contentManager.loadH5PJson(req.query.contentId)
         ])
             .then(([contentObject, h5pObject]) =>
                 new H5PPlayer.Player(libraryLoader)
@@ -82,37 +99,34 @@ const start = async () => {
     server.get('/examples/:key', (req, res) => {
         let key = req.params.key;
         let name = path.basename(examples[key].h5p);
+        const tempPath = path.resolve('tmp');
+        const tempFilename = path.join(tempPath, name);
 
-        let dir = `${__dirname}/examples/${name}`;
+        const libraryLoader = async (lib, maj, min) =>
+            libraryManager.loadLibrary(new H5PEditor.Library(lib, maj, min));
 
-        server.use('/h5p/libraries', express.static(dir));
-        server.use(`/h5p/content/${name}`, express.static(`${dir}`));
-
-        let first = Promise.resolve();
-        if (!fs.existsSync(dir)) {
-            first = exec(`sh download-example.sh ${examples[key].h5p}`);
-        }
-
-        const libraryLoader = (lib, maj, min) =>
-            require(`./examples/${name}/${lib}-${maj}.${min}/library.json`);
-
-        first
-            .then(() => {
-                const h5pObject = require(`${dir}/h5p.json`);
-                const contentObject = require(`${dir}/content/content.json`);
+        exec(`sh download-example.sh ${examples[key].h5p}`)
+            .then(async () => {
+                const contentId = await packageManager.addPackageLibrariesAndContent(tempFilename, { canUpdateAndInstallLibraries: true });
+                const h5pObject = await contentManager.loadH5PJson(contentId);
+                const contentObject = await contentManager.loadContent(contentId);
                 return new H5PPlayer.Player(libraryLoader).render(
-                    name,
+                    contentId,
                     contentObject,
                     h5pObject
                 );
             })
             .then(h5p_page => res.end(h5p_page))
-            .catch(error => res.status(500).end(error.message));
+            .catch(error => res.status(500).end(error.message))
+            .finally(() => {
+                fs.unlinkSync(tempFilename);
+                fs.rmdirSync(tempPath);
+            });
     });
 
-    server.get('/edit', (req, res) => {
+    server.get('/edit', async (req, res) => {
         if (!req.query.contentId) {
-            res.redirect(`?contentId=${shortid()}`);
+            res.redirect(`?contentId=${await contentStorage.createContentId()}`);
         }
         h5pEditor.render(req.query.contentId)
             .then(page => res.end(page));
@@ -205,9 +219,9 @@ const start = async () => {
                 break;
 
             case 'library-upload':
-                h5pEditor.uploadPackage(req.query.contentId, req.files.h5p.data)
-                    .then(() => Promise.all([
-                        h5pEditor.loadH5P(req.query.contentId),
+                h5pEditor.uploadPackage(req.files.h5p.data, req.query.contentId)
+                    .then((contentId) => Promise.all([
+                        h5pEditor.loadH5P(contentId),
                         h5pEditor.getContentTypeCache()
                     ])
 
@@ -231,12 +245,6 @@ const start = async () => {
     server.listen(process.env.PORT || 8080, () => {
         console.log(`server running at http://localhost:${process.env.PORT || 8080}`);
     });
-}
-
-function readJson(file) {
-    return new Promise((y, n) =>
-        fs.readFile(file, 'utf8', (err, data) =>
-            err ? n(err) : y(JSON.parse(data))))
 }
 
 start();
