@@ -1,6 +1,6 @@
 {
   "name": "h5p-demo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Demonstrates the usage of the H5P-Nodejs-Library and H5P-Editor-Nodejs-Library",
   "main": "express.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "fs-extra": "^8.1.0",
-    "h5p-editor": "^0.0.2",
+    "h5p-editor": "0.0.2",
     "h5p-player": "^0.4.0",
     "jsdom": "^15.1.1",
     "promise-queue": "^2.2.5",

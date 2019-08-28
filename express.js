@@ -58,7 +58,7 @@ const start = async () => {
     });
 
     server.get(`${h5pRoute}/content/:id/content/:file(*)`, async (req, res) => {
-        const stream = await contentManager.getContentFileStream(req.params.id, req.params.file, null);
+        const stream = await contentManager.getContentFileStream(req.params.id, `content/${req.params.file}`, null);
         stream.on("end", () => { res.end(); })
         stream.pipe(res.type(path.basename(req.params.file)));
     });
