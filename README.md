@@ -58,3 +58,12 @@ Lumi has adopted the code of conduct defined by the Contributor Covenant. It can
 ## License
 
 This project is licensed under the GNU GENERAL PUBLIC LICENSE v3 License - see the [LICENSE](LICENSE) file for details
+
+## Support
+
+This work obtained financial support for development from the German BMBF-sponsored research project "CARO - Care Reflection Online" (FKN: 01PD15012).
+
+Read more about them at the following websites:
+CARO - https://blogs.uni-bremen.de/caroprojekt/
+University of Bremen - https://www.uni-bremen.de/en.html
+BMBF - https://www.bmbf.de/en/index.html 
