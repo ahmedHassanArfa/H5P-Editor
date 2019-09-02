@@ -15,6 +15,7 @@ ${model.contentIds
 <h4><a href="/edit">Create New Content</a></h4>
 
 <h3>Examples from H5P.org</h3>
+<i>Clicking on the examples will download the examples, copy them to the content and display them.</i>
 <ul>
 ${model.examples
         .map(
