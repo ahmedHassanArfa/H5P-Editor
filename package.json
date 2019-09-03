@@ -31,7 +31,7 @@
     "express-fileupload": "^1.1.5",
     "fs-extra": "^8.1.0",
     "h5p-editor": "0.0.2",
-    "h5p-player": "^0.4.0",
+    "h5p-player": "^0.4.1",
     "jsdom": "^15.1.1",
     "promise-queue": "^2.2.5",
     "puppeteer": "^1.19.0",
