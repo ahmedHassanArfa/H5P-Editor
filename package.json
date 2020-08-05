@@ -28,7 +28,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "express-fileupload": "^1.1.5",
+    "express-fileupload": "^1.1.9",
     "fs-extra": "^8.1.0",
     "h5p-editor": "0.0.2",
     "h5p-player": "^0.4.1",
